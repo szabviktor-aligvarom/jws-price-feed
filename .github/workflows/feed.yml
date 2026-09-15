@@ -1,0 +1,60 @@
+name: Napi ar- es keszletfeed
+
+on:
+  schedule:
+    # 05:30 UTC = 07:30 budapesti nyari ido (CEST).
+    # Telen (CET) ez 06:30 budapesti idot jelent.
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feed
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Repo letoltese
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Feed generalasa
+        id: build
+        env:
+          FEED_WORKERS: "8"
+        run: python scripts/build_feed.py
+
+      # Ha a fenti lepes elbukott (sanity-check), a workflow itt megall,
+      # a commit nem tortenik meg, es a linken az utolso jo feed marad kint.
+      - name: Commit es push
+        run: |
+          if [ -z "$(git status --porcelain feed)" ]; then
+            echo "Nincs valtozas, nincs commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feed
+          COUNT=$(python -c "import json;print(json.load(open('feed/feed.json'))['meta']['product_count'])")
+          STOCK=$(python -c "import json;print(json.load(open('feed/feed.json'))['meta']['in_stock_count'])")
+          git commit -m "Feed frissites: ${COUNT} termek, ${STOCK} keszleten ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+          git push
+
+      - name: Osszefoglalo
+        if: always()
+        run: |
+          if [ -f feed/last_run.json ]; then
+            echo '### Futas eredmenye' >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat feed/last_run.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
