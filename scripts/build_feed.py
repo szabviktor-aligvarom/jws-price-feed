@@ -52,6 +52,15 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 OUT_OF_STOCK_MARKERS = ("vergriffen", "ausverkauft", "nicht verf")
 
 
+def to_budapest(dt):
+    """UTC idopont budapesti helyi idore, az oraatallitast is kovetve."""
+    try:
+        from zoneinfo import ZoneInfo
+        return dt.astimezone(ZoneInfo("Europe/Budapest")).isoformat(timespec="seconds")
+    except Exception:
+        return dt.isoformat(timespec="seconds")
+
+
 def log(msg):
     print("[%s] %s" % (datetime.datetime.now().strftime("%H:%M:%S"), msg), flush=True)
 
@@ -435,7 +444,7 @@ def main():
                                "(gyartoi ajanlott fogyasztoi ar), nem korabbi shop-ar. "
                                "Ahol a shop nem ad athuzott arat, ott list_price = price es on_sale = false.",
             "generated_utc": generated.isoformat(timespec="seconds"),
-            "generated_budapest": datetime.datetime.now().isoformat(timespec="seconds"),
+            "generated_budapest": to_budapest(generated),
             "product_count": total,
             "in_stock_count": in_stock,
             "excluded_zero_price_count": len(zero_rows),
