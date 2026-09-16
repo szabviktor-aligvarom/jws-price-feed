@@ -24,8 +24,11 @@ Ezek a linkek frissites utan sem valtoznak:
   (gyartoi ajanlott fogyasztoi ar), nem a termek korabbi shop-ara — tehat a
   `discount_percent` az UVP-hez kepesti kedvezmeny. A tobbi terméknél a shop nem ad
   athuzott arat, ott `on_sale: false` es `list_price` = `price`.
-- Nehany terméknél a shop maga hirdet 0,00 EUR-t (hianyos termekadat a shop oldalan).
-  Ezek a feedben 0 arral szerepelnek, nem szurjuk ki oket.
+- Nehany terméknél a shop maga hirdet 0,00 EUR-t (hianyos termekadat a shop oldalan,
+  jellemzoen variansos padlofutes-terméknél, es ez naponta valtozhat).
+  **Ezek a sorok nem kerulnek a fo feedbe**, mert betoltve ingyen adnanak ki termeket.
+  Kulon fajlban lathatok, hogy a shopnal jelezni lehessen:
+  https://raw.githubusercontent.com/szabviktor-aligvarom/jws-price-feed/main/feed/excluded_zero_price.json
 
 ## Feed mezok
 

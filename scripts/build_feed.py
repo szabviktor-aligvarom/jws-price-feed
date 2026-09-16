@@ -367,10 +367,18 @@ def main():
     rows, dup_count = dedupe(rows)
     rows.sort(key=lambda r: (r["category"], r["name"]))
 
+    # ---- 0 aras sorok kulonvalasztasa ----
+    # A shop nehany (jellemzoen variansos) terméknél 0,00 EUR-t hirdet, es ez
+    # naprol napra valtozhat. Ezek NEM kerulnek a fo feedbe, mert betoltve
+    # ingyen adnak ki termeket. Kulon fajlba mennek, hogy latszodjanak.
+    zero_rows = [r for r in rows if not r["price"]]
+    rows = [r for r in rows if r["price"]]
+    log("0 aras sorok kizarva a fo feedbol: %d" % len(zero_rows))
+
     # ---------------- sanity-checkek ----------------
     total = len(rows)
-    missing_price = sum(1 for r in rows if not r["price"])
-    missing_pct = missing_price / total * 100
+    missing_price = len(zero_rows)
+    missing_pct = missing_price / (total + missing_price) * 100 if (total + missing_price) else 0
     in_stock = sum(1 for r in rows if r["in_stock"])
     priced = [r["price"] for r in rows if r["price"] > 0]
     avg_price = sum(priced) / len(priced) if priced else 0.0
@@ -379,15 +387,15 @@ def main():
         "products": total,
         "in_stock": in_stock,
         "out_of_stock": total - in_stock,
-        "missing_price": missing_price,
-        "missing_price_pct": round(missing_pct, 2),
+        "excluded_zero_price": missing_price,
+        "excluded_zero_price_pct": round(missing_pct, 2),
         "duplicate_skus": dup_count,
         "avg_price": round(avg_price, 2),
         "fetch_failed": len(failed),
         "currency": CURRENCY,
     })
 
-    log("ellenorzes: %d termek, %d keszleten, %d ar nelkul (%.1f%%), atlagar %.2f"
+    log("ellenorzes: %d termek a feedben, %d keszleten, %d kizart 0 aras (%.1f%%), atlagar %.2f"
         % (total, in_stock, missing_price, missing_pct, avg_price))
 
     if total < MIN_PRODUCTS:
@@ -396,7 +404,6 @@ def main():
     if missing_pct > MAX_MISSING_PRICE_PCT:
         die("A termekek %.1f%%-anal nincs ar (max %.1f%%)."
             % (missing_pct, MAX_MISSING_PRICE_PCT), report)
-
     prev_total = prev.get("products") or 0
     if prev_total:
         shrink = (prev_total - total) / prev_total * 100
@@ -431,6 +438,10 @@ def main():
             "generated_budapest": datetime.datetime.now().isoformat(timespec="seconds"),
             "product_count": total,
             "in_stock_count": in_stock,
+            "excluded_zero_price_count": len(zero_rows),
+            "excluded_note": "A 0,00 EUR-t hirdeto sorok nem szerepelnek itt "
+                             "(a shop hibas termekadata miatt betoltve ingyen adnanak ki termeket). "
+                             "Ezek a feed/excluded_zero_price.json fajlban lathatok.",
             "duplicate_skus_collapsed": dup_count,
             "identifier": "sku",
         },
@@ -452,6 +463,15 @@ def main():
         w.writeheader()
         w.writerows(rows)
     os.replace(tmp_csv, CSV_PATH)
+
+    # a kizart 0 aras sorok kulon, hogy a shop tudja javitani
+    with open(os.path.join(FEED_DIR, "excluded_zero_price.json"), "w", encoding="utf-8") as f:
+        json.dump({
+            "note": "Ezeket a sorokat a shop 0,00 EUR-ral hirdeti, ezert nem kerultek a fo feedbe.",
+            "generated_utc": generated.isoformat(timespec="seconds"),
+            "count": len(zero_rows),
+            "products": zero_rows,
+        }, f, ensure_ascii=False, indent=1)
 
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump({
