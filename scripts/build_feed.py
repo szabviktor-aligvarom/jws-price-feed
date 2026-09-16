@@ -35,10 +35,13 @@ STATE_PATH = os.path.join(FEED_DIR, "state.json")
 REPORT_PATH = os.path.join(FEED_DIR, "last_run.json")
 
 # ---------------- sanity-check kuszobok ----------------
+# A futas heti egyszeri, ezert a kuszobok egy hetnyi termeszetes valtozast
+# elnezenek, de a katasztrofalis (formatum- vagy forrashiba jellegu)
+# elteresre megallnak.
 MIN_PRODUCTS = 1200          # fix minimum termekszam
 MAX_MISSING_PRICE_PCT = 20.0  # max ennyi %-nal lehet hianyzo ar
-MAX_SHRINK_PCT = 30.0         # katalogus max ennyit zuhanhat az elozo futashoz kepest
-MAX_AVG_PRICE_DRIFT_PCT = 30.0  # atlagar max ennyit mozdulhat (formatum-hiba elleni ovo)
+MAX_SHRINK_PCT = 35.0         # katalogus max ennyit zuhanhat az elozo futashoz kepest
+MAX_AVG_PRICE_DRIFT_PCT = 35.0  # atlagar max ennyit mozdulhat (formatum-hiba elleni ovo)
 MAX_FETCH_FAIL_PCT = 10.0     # max ennyi %-a bukhat el a letolteseknek
 MAX_GONE_PCT = 15.0          # max ennyi %-a lehet 404 (URL-szerkezet valtozas elleni ovo)
 

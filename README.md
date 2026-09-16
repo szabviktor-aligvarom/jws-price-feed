@@ -1,6 +1,6 @@
 # jws-store.de ar- es keszletfeed
 
-Napi automatikus ar- es keszletfeed a [jws-store.de](https://www.jws-store.de) oldalarol.
+Heti automatikus ar- es keszletfeed a [jws-store.de](https://www.jws-store.de) oldalarol.
 A termek azonosito kulcsa a **cikkszam (SKU / Artikelnummer)**, ami a feedben egyedi.
 
 ## Allando linkek
@@ -80,8 +80,8 @@ A generator nem-nulla exit koddal leall, es **nem irja felul a jo adatot**, ha:
 
 - a termekszam 1200 ala esik,
 - a termekek 20%-anal tobbnel nincs ar,
-- a katalogus az elozo futashoz kepest 30%-nal tobbet zuhan,
-- az atlagar az elozo futashoz kepest 30%-nal tobbet mozdul
+- a katalogus az elozo futashoz kepest 35%-nal tobbet zuhan,
+- az atlagar az elozo futashoz kepest 35%-nal tobbet mozdul
   (arformatum-hiba, pl. "60,90" -> "6090" elleni vedelem),
 - a letoltesek 10%-anal tobb elbukik (blokkolas, halozati hiba),
 - a termekoldalak 15%-anal tobb 404-et ad (URL-szerkezet valtozas a shopban).
@@ -95,9 +95,12 @@ es az Actions-futas osszefoglalojaban olvashato.
 
 ## Utemezes
 
-GitHub Actions, naponta `30 5 * * *` (UTC) = **07:30 budapesti nyari ido**.
+GitHub Actions, **hetente hetfon** `30 5 * * 1` (UTC) = **07:30 budapesti nyari ido**.
 Figyelem: a GitHub UTC-ben utemez, ezert teli idoszamitasban (CET) ez 06:30-kor fut.
-Kezi inditas: Actions ful -> "Napi ar- es keszletfeed" -> "Run workflow".
+Kezi inditas barmikor: Actions ful -> "Heti ar- es keszletfeed" -> "Run workflow".
+
+A kuszobok egy hetnyi termeszetes valtozast elnezenek (ezert 35%, nem 30%),
+de a formatum- vagy forrashiba jellegu elteresre megallnak.
 
 Publikus repoban a GitHub Actions hasznalata ingyenes, igy a feed uzemeltetesi
 koltsege nulla.
@@ -105,4 +108,4 @@ koltsege nulla.
 ## Arnaplo
 
 Minden frissites egy commit, igy a commit-tortenet ingyenes arnaplot ad:
-barmely korabbi nap feedje visszaolvashato a repo tortenetebol.
+barmely korabbi heti feed visszaolvashato a repo tortenetebol.

@@ -1,10 +1,10 @@
-name: Napi ar- es keszletfeed
+name: Heti ar- es keszletfeed
 
 on:
   schedule:
-    # 05:30 UTC = 07:30 budapesti nyari ido (CEST).
+    # Hetfo 05:30 UTC = 07:30 budapesti nyari ido (CEST).
     # Telen (CET) ez 06:30 budapesti idot jelent.
-    - cron: "30 5 * * *"
+    - cron: "30 5 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -61,6 +61,7 @@ jobs:
             sleep $((i * 5))
           done
           echo "A push 5 kiserlet utan sem sikerult."
+          python scripts/mark_publish_failed.py || true
           exit 1
 
       - name: Osszefoglalo
