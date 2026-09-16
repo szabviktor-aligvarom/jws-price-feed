@@ -1,0 +1,15 @@
+{
+ "started_utc": "2026-09-16T06:40:26+00:00",
+ "source": "https://www.jws-store.de",
+ "products": 1545,
+ "in_stock": 1517,
+ "out_of_stock": 28,
+ "missing_price": 22,
+ "missing_price_pct": 1.42,
+ "duplicate_skus": 0,
+ "avg_price": 300.85,
+ "fetch_failed": 0,
+ "currency": "EUR",
+ "ok": true,
+ "finished_utc": "2026-09-16T06:41:42+00:00"
+}
