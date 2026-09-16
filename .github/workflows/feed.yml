@@ -47,7 +47,21 @@ jobs:
           COUNT=$(python -c "import json;print(json.load(open('feed/feed.json'))['meta']['product_count'])")
           STOCK=$(python -c "import json;print(json.load(open('feed/feed.json'))['meta']['in_stock_count'])")
           git commit -m "Feed frissites: ${COUNT} termek, ${STOCK} keszleten ($(date -u '+%Y-%m-%d %H:%M UTC'))"
-          git push
+          # Ha kozben valaki mast pusholt a repoba, ujraprobaljuk: a feed
+          # fajlokat mindig a mostani futas eredmenye nyeri.
+          for i in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "Push sikeres."
+              exit 0
+            fi
+            echo "Push elutasitva, ujraprobalas ($i/5)..."
+            git fetch origin main
+            git checkout --ours feed || true
+            git rebase -X ours origin/main || git rebase --abort
+            sleep $((i * 5))
+          done
+          echo "A push 5 kiserlet utan sem sikerult."
+          exit 1
 
       - name: Osszefoglalo
         if: always()
