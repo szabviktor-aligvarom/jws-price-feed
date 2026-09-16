@@ -1,5 +1,5 @@
 {
- "started_utc": "2026-09-16T08:41:08+00:00",
+ "started_utc": "2026-09-16T08:44:17+00:00",
  "source": "https://www.jws-store.de",
  "gone_404": 0,
  "gone_404_pct": 0.0,
@@ -12,8 +12,8 @@
  "avg_price": 301.65,
  "fetch_failed": 0,
  "currency": "EUR",
- "catalog_change_pct": -1.94,
- "avg_price_drift_pct": 0.21,
+ "catalog_change_pct": -0.0,
+ "avg_price_drift_pct": 0.0,
  "ok": true,
- "finished_utc": "2026-09-16T08:42:37+00:00"
+ "finished_utc": "2026-09-16T08:45:59+00:00"
 }
