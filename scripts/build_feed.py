@@ -40,6 +40,7 @@ MAX_MISSING_PRICE_PCT = 20.0  # max ennyi %-nal lehet hianyzo ar
 MAX_SHRINK_PCT = 30.0         # katalogus max ennyit zuhanhat az elozo futashoz kepest
 MAX_AVG_PRICE_DRIFT_PCT = 30.0  # atlagar max ennyit mozdulhat (formatum-hiba elleni ovo)
 MAX_FETCH_FAIL_PCT = 10.0     # max ennyi %-a bukhat el a letolteseknek
+MAX_GONE_PCT = 15.0          # max ennyi %-a lehet 404 (URL-szerkezet valtozas elleni ovo)
 
 WORKERS = int(os.environ.get("FEED_WORKERS", "8"))
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -56,7 +57,8 @@ def log(msg):
 
 
 def fetch(url, tries=4):
-    last = None
+    """A visszateres (html, status). A 404 vegleges: torolt termek, nem hiba,
+    ezert nem probaljuk ujra, es nem szamit halozati hibanak."""
     for t in range(tries):
         try:
             req = urllib.request.Request(url, headers={
@@ -69,12 +71,16 @@ def fetch(url, tries=4):
                 data = r.read()
                 if r.headers.get("Content-Encoding") == "gzip":
                     data = gzip.decompress(data)
-                return data.decode("utf-8", "replace")
-        except Exception as e:
-            last = e
+                return data.decode("utf-8", "replace"), 200
+        except urllib.error.HTTPError as e:
+            if e.code in (404, 410):
+                return None, e.code
             if t < tries - 1:
                 time.sleep(1.5 * (t + 1) + random.random())
-    return None
+        except Exception:
+            if t < tries - 1:
+                time.sleep(1.5 * (t + 1) + random.random())
+    return None, 0
 
 
 def balanced(s, i):
@@ -207,8 +213,11 @@ def parse_product(url, h):
 
 
 def job(url):
-    h = fetch(url)
-    if not h:
+    h, status = fetch(url)
+    if h is None:
+        if status in (404, 410):
+            # Torolt termek, ami a sitemapban maradt. Nem halozati hiba.
+            return {"url": url, "_gone": True}
         return {"url": url, "_fetch_failed": True}
     try:
         return parse_product(url, h)
@@ -218,7 +227,7 @@ def job(url):
 
 def get_urls():
     log("sitemap letoltese")
-    xml = fetch(SITEMAP)
+    xml, _ = fetch(SITEMAP)
     if not xml:
         die("A sitemap nem toltheto le: " + SITEMAP)
     urls = re.findall(r"<loc>(https://www\.jws-store\.de/[^<]+)</loc>", xml)
@@ -311,16 +320,25 @@ def main():
                 log("  %d/%d" % (done, len(urls)))
 
     failed = [r for r in raw if r.get("_fetch_failed")]
+    gone = [r for r in raw if r.get("_gone")]
     fail_pct = len(failed) / len(raw) * 100 if raw else 100
-    log("letoltes kesz. hibas: %d (%.1f%%)" % (len(failed), fail_pct))
+    gone_pct = len(gone) / len(raw) * 100 if raw else 0
+    report["gone_404"] = len(gone)
+    report["gone_404_pct"] = round(gone_pct, 2)
+    log("letoltes kesz. hibas: %d (%.1f%%), torolt/404: %d (%.1f%%)"
+        % (len(failed), fail_pct, len(gone), gone_pct))
     if fail_pct > MAX_FETCH_FAIL_PCT:
         die("A letoltesek %.1f%%-a elbukott (max %.1f%%). Halozati vagy blokkolasi hiba."
             % (fail_pct, MAX_FETCH_FAIL_PCT), report)
+    if gone_pct > MAX_GONE_PCT:
+        die("A termekoldalak %.1f%%-a 404 (max %.1f%%). Valoszinuleg URL-szerkezet "
+            "valtozas a shopban, nem tenyleges termektorles."
+            % (gone_pct, MAX_GONE_PCT), report)
 
     rows = []
     ts = started.isoformat(timespec="seconds")
     for r in raw:
-        if r.get("_fetch_failed"):
+        if r.get("_fetch_failed") or r.get("_gone"):
             continue
         if not r.get("sku") or not r.get("name"):
             continue
@@ -406,6 +424,9 @@ def main():
             "price_note": "Brutto kiskereskedelmi arak, a shop nyilvanos arai (inkl. MwSt.), szallitasi koltseg nelkul.",
             "stock_type": "boolean",
             "stock_note": "A shop nem publikal darabszamot, csak keszletjelzest, ezert az in_stock igaz/hamis.",
+            "list_price_note": "A list_price a shop athuzott ara, ami tipikusan UVP "
+                               "(gyartoi ajanlott fogyasztoi ar), nem korabbi shop-ar. "
+                               "Ahol a shop nem ad athuzott arat, ott list_price = price es on_sale = false.",
             "generated_utc": generated.isoformat(timespec="seconds"),
             "generated_budapest": datetime.datetime.now().isoformat(timespec="seconds"),
             "product_count": total,

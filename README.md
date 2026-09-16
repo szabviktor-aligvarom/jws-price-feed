@@ -19,9 +19,11 @@ Ezek a linkek frissites utan sem valtoznak:
 - **A keszlet igaz/hamis, nem darabszam.** A shop nem publikal keszletmennyiseget,
   csak szoveges jelzest ("Sofort versandfertig" / "Produkt vergriffen"), ezert az
   `in_stock` logikai ertek. A `stock_type` mezo ezt explicit jelzi (`boolean`).
-- **Listaar / akcio:** a shop a legtobb termeknel nem publikal athuzott arat, ezert
-  az `on_sale` tipikusan `false`, a `list_price` pedig megegyezik az `price`-szal.
-  Ha a shop bekapcsol egy akciot es kiirja a listaarat, a mezok automatikusan kitoltodnek.
+- **Listaar / akcio:** ahol a shop athuzott arat mutat, ott az `on_sale` `true`, es a
+  `list_price` az athuzott ar. Figyelem: ez a shopban tipikusan **UVP**
+  (gyartoi ajanlott fogyasztoi ar), nem a termek korabbi shop-ara — tehat a
+  `discount_percent` az UVP-hez kepesti kedvezmeny. A tobbi terméknél a shop nem ad
+  athuzott arat, ott `on_sale: false` es `list_price` = `price`.
 - Nehany terméknél a shop maga hirdet 0,00 EUR-t (hianyos termekadat a shop oldalan).
   Ezek a feedben 0 arral szerepelnek, nem szurjuk ki oket.
 
@@ -78,7 +80,11 @@ A generator nem-nulla exit koddal leall, es **nem irja felul a jo adatot**, ha:
 - a katalogus az elozo futashoz kepest 30%-nal tobbet zuhan,
 - az atlagar az elozo futashoz kepest 30%-nal tobbet mozdul
   (arformatum-hiba, pl. "60,90" -> "6090" elleni vedelem),
-- a letoltesek 10%-anal tobb elbukik (blokkolas, halozati hiba).
+- a letoltesek 10%-anal tobb elbukik (blokkolas, halozati hiba),
+- a termekoldalak 15%-anal tobb 404-et ad (URL-szerkezet valtozas a shopban).
+
+A sitemapban maradt, mar torolt termekek (404) normalis esetben egyszeruen kimaradnak
+a feedbol; csak akkor allitjak le a futast, ha az aranyuk atlepi a fenti kuszobot.
 
 Ilyenkor a workflow elbukik, a commit nem tortenik meg, es a linkeken
 **az utolso jo feed marad kint**. A hiba oka a `feed/last_run.json`-ban
