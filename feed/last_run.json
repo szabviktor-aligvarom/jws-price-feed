@@ -1,19 +1,19 @@
 {
- "started_utc": "2026-11-02T13:41:40+00:00",
+ "started_utc": "2026-11-09T14:07:51+00:00",
  "source": "https://www.jws-store.de",
  "gone_404": 0,
  "gone_404_pct": 0.0,
- "products": 1489,
- "in_stock": 1461,
+ "products": 1494,
+ "in_stock": 1466,
  "out_of_stock": 28,
- "excluded_zero_price": 27,
- "excluded_zero_price_pct": 1.78,
+ "excluded_zero_price": 21,
+ "excluded_zero_price_pct": 1.39,
  "duplicate_skus": 0,
- "avg_price": 304.73,
+ "avg_price": 303.85,
  "fetch_failed": 0,
  "currency": "EUR",
- "catalog_change_pct": -0.47,
- "avg_price_drift_pct": 0.39,
+ "catalog_change_pct": 0.34,
+ "avg_price_drift_pct": 0.29,
  "ok": true,
- "finished_utc": "2026-11-02T13:42:54+00:00"
+ "finished_utc": "2026-11-09T14:10:24+00:00"
 }
